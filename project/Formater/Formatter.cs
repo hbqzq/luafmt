@@ -18,14 +18,15 @@ namespace lfmt
 
             tokens.Fill();
 
-            var comments = new List<IToken>(tokens.GetTokens().Where(t => t.Channel == LuaLexer.Hidden));
+            var comments = tokens.GetTokens().Where(t => t.Channel == LuaLexer.Hidden);
+            var spaces = tokens.GetTokens().Where(t => t.Channel == 2);
 
             parser.BuildParseTree = true;
             parser.TrimParseTree = false;
 
             IRuleNode root = parser.chunk();
 
-            var ctx = new FormatContext(root, comments, writer, options);
+            var ctx = new FormatContext(root, comments, spaces, writer, options);
             RuleFormatter.Format(root, ctx);
 
             ctx.WriteComments(int.MaxValue);

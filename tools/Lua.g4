@@ -329,7 +329,11 @@ LINE_COMMENT
     ;
     
 WS  
-    : [ \t\u000C\r\n]+ -> skip
+    : [\u000C\r\n]+ -> skip
+    ;
+
+SPACE
+    : [ \t]+ -> channel(2)
     ;
 
 SHEBANG

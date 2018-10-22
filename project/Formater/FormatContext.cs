@@ -33,6 +33,7 @@ namespace lfmt
         private readonly IFormatWriter writer;
         private readonly IParseTree root;
         private readonly Queue<IToken> comments;
+        private readonly Queue<IToken> spaces;
         private readonly Stack<IndentScope> scopes = new Stack<IndentScope>();
 
         private readonly string INDENT_UNIT;
@@ -68,10 +69,11 @@ namespace lfmt
         }
         public FormatSymbol prevSymbol { get; private set; }
 
-        public FormatContext(IParseTree root, IList<IToken> comments, IFormatWriter writer, FormatOptions options)
+        public FormatContext(IParseTree root, IEnumerable<IToken> comments, IEnumerable<IToken> spaces, IFormatWriter writer, FormatOptions options)
         {
             this.root = root;
             this.comments = new Queue<IToken>(comments);
+            this.spaces = new Queue<IToken>(spaces);
             this.writer = writer;
             this.options = options;
             this.line = 1;
@@ -228,6 +230,33 @@ namespace lfmt
                 }
                 else
                 {
+                    if (FormatSymbol.IsLineBreak(prevSymbol) || prevSymbol.line < next.Line)
+                    {
+                        while (next.Line > line)
+                        {
+                            WriteLineBreak();
+                        }
+
+                        while (spaces.Count > 0)
+                        {
+                            var item = spaces.Peek();
+                            if (item.Line < line)
+                            {
+                                spaces.Dequeue();
+                                continue;
+                            }
+                            if (item.Line > line)
+                            {
+                                break;
+                            }
+                            if (item != null && item.Line == line)
+                            {
+                                spaces.Dequeue();
+                                Write(item.Text);
+                            }
+                        }
+                    }
+
                     for (int i = 0, len = commentLines.Length; i < len; i++)
                     {
                         var item = commentLines[i];
